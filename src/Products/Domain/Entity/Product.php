@@ -9,7 +9,7 @@ class Product
     private int $id;
     private string $name;
     private string $description;
-    private int $weight;
+    private string $weight;
     private string $category;
 
     public function getId(): ?int
@@ -41,12 +41,12 @@ class Product
         return $this;
     }
 
-    public function getWeight(): ?int
+    public function getWeight(): ?string
     {
         return $this->weight;
     }
 
-    public function setWeight(int $weight): self
+    public function setWeight(string $weight): self
     {
         $this->weight = $weight;
 
