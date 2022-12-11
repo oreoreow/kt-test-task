@@ -1,0 +1,10 @@
+Options +FollowSymLinks
+IndexIgnore */*
+RewriteEngine on
+
+RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+RewriteCond %{REQUEST_URI} ^/(public)
+RewriteRule ^(.+) /public/$1
+
+RewriteCond %{REQUEST_URI} !^/(public|coverage)
+RewriteRule (.*) /public/$1
