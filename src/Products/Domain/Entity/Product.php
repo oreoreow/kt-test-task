@@ -46,6 +46,13 @@ class Product
         return $this->weight;
     }
 
+    public function getGWeight(): ?string
+    {
+        $weightExploded = explode(' ', $this->weight);
+        if($weightExploded[1] == 'g') return floatval($weightExploded[0]);
+        return floatval($weightExploded[0]) * 1000;
+    }
+
     public function setWeight(string $weight): self
     {
         $this->weight = $weight;
