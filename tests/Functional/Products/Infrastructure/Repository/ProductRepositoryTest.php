@@ -2,7 +2,10 @@
 
 namespace Functional\Products\Infrastructure\Repository;
 
+use App\Products\Domain\Entity\ProductFilter;
 use App\Products\Domain\Factory\ProductFactory;
+use App\Products\Domain\Factory\ProductFilterFactory;
+use App\Products\Domain\Service\ProductsFilterServiceInterface;
 use App\Products\Infrastructure\Repository\ProductRepository;
 use Faker\Factory;
 use Faker\Generator;
@@ -36,7 +39,8 @@ class ProductRepositoryTest extends WebTestCase
 
         $this->repository->add($product);
 
-        $existingProduct = $this->repository->findById($product->getId());
+        $existingProducts = $this->repository->findBy(['id' => $product->getId()]);
+        $existingProduct = $existingProducts[array_key_first($existingProducts)];
 
         $this->assertEquals($product->getId(), $existingProduct->getId());
         $this->assertEquals($product->getName(), $existingProduct->getName());

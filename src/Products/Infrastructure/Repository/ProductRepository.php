@@ -26,7 +26,8 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
 
     public function findBy(array $criteria, ?array $orderBy = null, $limit = null, $offset = null): array
     {
-        $customFilter = array_key_first($orderBy) == ProductFilter::ORDER_BY_WEIGHT
+        $customFilter = $orderBy &&
+                        array_key_first($orderBy) == ProductFilter::ORDER_BY_WEIGHT
                         || array_key_exists('minWeight', $criteria)
                         || array_key_exists('maxWeight', $criteria);
         $finalLimit = $customFilter ? null : $limit;
@@ -53,7 +54,7 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
         }
 
 
-        if(array_key_first($orderBy) == ProductFilter::ORDER_BY_WEIGHT) {
+        if($orderBy && array_key_first($orderBy) == ProductFilter::ORDER_BY_WEIGHT) {
 
             $order = $orderBy[array_key_first($orderBy)];
             usort($result,
@@ -76,7 +77,7 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
 
     public function getFoundProductsCount(): int
     {
-        return $this->totalCount;
+        return $this->totalCount ?? 0;
     }
 
     public function getCategories(): array
