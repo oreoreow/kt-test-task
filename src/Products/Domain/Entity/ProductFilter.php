@@ -27,7 +27,7 @@ class ProductFilter
     const DEFAULT_ORDER = self::ORDER_BY_NAME;
 
     private int $page = 1;
-    private int $limit = 10;
+    private ?int $limit;
     private string $orderBy = self::DEFAULT_ORDER_BY;
     private string $order = self::ORDER_BY_NAME;
     private ?string $category;
@@ -52,11 +52,11 @@ class ProductFilter
     }
 
     /**
-     * @param int $limit
+     * @param ?int $limit
      *
      * @return ProductFilter
      */
-    public function setLimit(int $limit): self
+    public function setLimit(?int $limit): self
     {
         $this->limit = $limit;
 
@@ -127,9 +127,9 @@ class ProductFilter
     }
 
     /**
-     * @return int
+     * @return ?int
      */
-    public function getLimit(): int
+    public function getLimit(): ?int
     {
         return $this->limit;
     }
