@@ -5,12 +5,16 @@ namespace App\Products\Infrastructure\Service;
 
 use App\Products\Domain\Entity\Product;
 use App\Products\Domain\Entity\ProductFilter;
+use App\Products\Domain\Factory\ProductFilterFactory;
 use App\Products\Domain\Repository\ProductRepositoryInterface;
 use App\Products\Domain\Service\ProductsFilterServiceInterface;
 
 class ProductsFilterService implements ProductsFilterServiceInterface
 {
-    public function __construct(private ProductRepositoryInterface $productRepository)
+    public function __construct(
+        private ProductRepositoryInterface $productRepository,
+        private ProductFilterFactory $productFilterFactory,
+    )
     {
     }
 
@@ -41,10 +45,16 @@ class ProductsFilterService implements ProductsFilterServiceInterface
 
     public function getFilteredProductsCount(ProductFilter $productFilter): int
     {
-        if($this->productRepository->getFoundProductsCount() == 0) {
-            $this->getFilteredProducts($productFilter);
-        }
-
-        return $this->productRepository->getFoundProductsCount();
+        $newFilter = $this->productFilterFactory->create(
+            $productFilter->getOrderBy(),
+            $productFilter->getOrder(),
+            null,
+           1,
+            $productFilter->getCategory(),
+            $productFilter->getMinGWeight(),
+            $productFilter->getMaxGWeight(),
+        );
+        $products = $this->getFilteredProducts($newFilter);
+        return count($products);
     }
 }

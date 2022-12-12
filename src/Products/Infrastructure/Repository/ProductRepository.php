@@ -66,18 +66,11 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
             );
         }
 
-        $this->totalCount = count($result);
-
         if ($customFilter) {
             $result = array_slice($result, $offset, $limit);
         }
 
         return $result;
-    }
-
-    public function getFoundProductsCount(): int
-    {
-        return $this->totalCount ?? 0;
     }
 
     public function getCategories(): array
