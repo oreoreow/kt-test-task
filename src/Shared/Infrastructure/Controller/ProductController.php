@@ -4,10 +4,14 @@ namespace App\Shared\Infrastructure\Controller;
 
 use App\Products\Domain\Entity\ProductFilter;
 use App\Products\Domain\Factory\ProductFilterFactory;
+use App\Products\Domain\Repository\ProductRepositoryInterface;
 use App\Products\Domain\Service\ProductsFilterServiceInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
 
 class ProductController extends AbstractController
@@ -24,7 +28,6 @@ class ProductController extends AbstractController
 
     /**
      * @Route("/products")
-     * @Route("/")
      * @param Request $request
      *
      * @return Response
@@ -99,19 +102,27 @@ class ProductController extends AbstractController
      * @Route("/import/products.xml")
      * @param Request $request
      *
-     * @return Response
+     * @return BinaryFileResponse
      */
-    public function importXML(Request $request): Response
+    public function importXML(Request $request): BinaryFileResponse
     {
         $productFilter = $this->createProductFilter($request);
         $filteredProducts = $this->productsFilterService->getFilteredProducts($productFilter);
 
-        $response = new Response(
-            $this->renderView('import.xml.html.twig', [
-                'products' => $filteredProducts,
-            ])
+        $xmlContent = $this->renderView('import.xml.html.twig', [
+            'products' => $filteredProducts,
+        ]);
+
+
+        $path = $this->getParameter('kernel.project_dir') . '/public/xml/'.microtime().'.xml';
+        $fileSystem = new Filesystem();
+        $fileSystem->dumpFile($path, $xmlContent);
+        $response = new BinaryFileResponse($path);
+        // header('Content-Disposition: attachment; filename="import.xml"');
+        $response->setContentDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            'import.xml'
         );
-        $response->headers->set('Content-type', 'text/xml');
 
         return $response;
     }
