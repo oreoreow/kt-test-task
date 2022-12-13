@@ -70,16 +70,16 @@ class ProductController extends AbstractController
     }
 
     /**
-     * @Route("/import")
+     * @Route("/export")
      * @param Request $request
      *
      * @return Response
      */
-    public function import(Request $request): Response
+    public function export(Request $request): Response
     {
         $productFilter = $this->createProductFilter($request);
 
-        return $this->render('import.html.twig', [
+        return $this->render('export.html.twig', [
             'products' => [
                 'categories' => [
                     'list' => $this->productsFilterService->getCategories()
@@ -99,17 +99,17 @@ class ProductController extends AbstractController
     }
 
     /**
-     * @Route("/import/products.xml")
+     * @Route("/export/products.xml")
      * @param Request $request
      *
      * @return BinaryFileResponse
      */
-    public function importXML(Request $request): BinaryFileResponse
+    public function exportXML(Request $request): BinaryFileResponse
     {
         $productFilter = $this->createProductFilter($request);
         $filteredProducts = $this->productsFilterService->getFilteredProducts($productFilter);
 
-        $xmlContent = $this->renderView('import.xml.html.twig', [
+        $xmlContent = $this->renderView('export.xml.html.twig', [
             'products' => $filteredProducts,
         ]);
 
@@ -121,7 +121,7 @@ class ProductController extends AbstractController
 
         $response->setContentDisposition(
             ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            'import.xml'
+            'products.xml'
         );
 
         return $response;

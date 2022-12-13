@@ -15,18 +15,18 @@ class ProductsCheckActionTest extends WebTestCase
         $this->assertResponseIsSuccessful();
     }
 
-    public function testImportRequestRespondedSuccessfulResult(): void
+    public function testExportRequestRespondedSuccessfulResult(): void
     {
         $client = static::createClient();
-        $client->request(Request::METHOD_GET, '/import');
+        $client->request(Request::METHOD_GET, '/export');
 
         $this->assertResponseIsSuccessful();
     }
 
-    public function testImportXMLRequestRespondedSuccessfulResult(): void
+    public function testExportXMLRequestRespondedSuccessfulResult(): void
     {
         $client = static::createClient();
-        $client->request(Request::METHOD_GET, '/import/products.xml');
+        $client->request(Request::METHOD_GET, '/export/products.xml');
 
         $this->assertResponseIsSuccessful();
     }

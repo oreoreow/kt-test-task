@@ -33,7 +33,7 @@
             <div class="row">
                 <div class="col">
                     <p>Products found: {{ products.total }}</p>
-                    <button type="submit" class="btn btn-primary" id="submitImport">Import</button>
+                    <button type="submit" class="btn btn-primary" id="submitExport">Export</button>
                 </div>
 
             </div>
@@ -50,8 +50,8 @@
             url.search      = search_params.toString();
             window.location = url.toString()
         };
-        document.getElementById('submitImport').onclick = function () {
-            window.location.pathname = '/import/products.xml';
+        document.getElementById('submitExport').onclick = function () {
+            window.location.pathname = '/export/products.xml';
         };
     </script>
 {% endblock %}
