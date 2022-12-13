@@ -118,7 +118,7 @@ class ProductController extends AbstractController
         $fileSystem = new Filesystem();
         $fileSystem->dumpFile($path, $xmlContent);
         $response = new BinaryFileResponse($path);
-        // header('Content-Disposition: attachment; filename="import.xml"');
+
         $response->setContentDisposition(
             ResponseHeaderBag::DISPOSITION_ATTACHMENT,
             'import.xml'
