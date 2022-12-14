@@ -48,7 +48,7 @@ class Product
 
     public function setWeight(string $weight): self
     {
-        $weightExploded = explode(' ', $this->weight);
+        $weightExploded = explode(' ', $weight);
 
         $this->weight = $weightExploded[1] == 'g' ? floatval($weightExploded[0]) : floatval($weightExploded[0]) * 1000;
 

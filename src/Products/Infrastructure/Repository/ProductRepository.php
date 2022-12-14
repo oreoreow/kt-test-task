@@ -23,6 +23,9 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
         parent::__construct($registry, Product::class);
     }
 
+    /**
+     * @throws Exception
+     */
     public function importProductsFromCSV(string $filename): bool
     {
         $sql = "LOAD DATA LOCAL INFILE '$filename'
@@ -32,12 +35,8 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
                 IGNORE 0 ROWS (name, description, @weight, category)
                 SET weight = REPLACE(REPLACE(@weight, ' kg', '000'), ' g', '')";
 
-        try {
-            $stmt = $this->_em->getConnection()->prepare($sql);
-            $stmt->executeQuery();
-        } catch (\Exception $e) {
-            return false;
-        }
+        $stmt = $this->_em->getConnection()->prepare($sql);
+        $stmt->executeQuery();
 
         return true;
     }
@@ -55,38 +54,47 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
 
         $criteriaObj = new Criteria();
 
-        $criteriaObj->andWhere(Criteria::expr()->gte('weight', $minWeight));
+        if($minWeight) {
+            $criteriaObj->andWhere(Criteria::expr()->gte('weight', $minWeight));
+            unset($criteria['minWeight']);
+        }
 
         if($maxWeight) {
             $criteriaObj->andWhere(Criteria::expr()->lte('weight', $maxWeight));
+            unset($criteria['maxWeight']);
         }
 
         if(array_key_exists('category', $criteria)) {
             $criteriaObj->andWhere(Criteria::expr()->eq('category', $criteria['category']));
+            unset($criteria['category']);
+        }
+
+        foreach($criteria as $field => $value) {
+            $criteriaObj->andWhere(Criteria::expr()->eq($field, $value));
         }
 
         return $criteriaObj;
     }
 
 
+    /**
+     * @throws QueryException
+     */
     public function findBy(array $criteria, ?array $orderBy = null, $limit = null, $offset = null): array
     {
 
         $criteriaObj = $this->createCriteriaFromArray($criteria);
 
-        try {
-            return $this->_em->createQueryBuilder()
-                      ->select('p')
-                      ->from(Product::class, 'p')
-                      ->addCriteria($criteriaObj)
-                      ->orderBy('p.'.array_key_first($orderBy), $orderBy[array_key_first($orderBy)])
-                      ->setMaxResults($limit)
-                      ->setFirstResult($offset)
-                      ->getQuery()
-                      ->getResult();
-        } catch (QueryException $e) {
-            return [];
-        }
+        $result = $this->_em->createQueryBuilder()
+                            ->select('p')
+                            ->from(Product::class, 'p')
+                            ->addCriteria($criteriaObj)
+                            ->setMaxResults($limit)
+                            ->setFirstResult($offset);
+
+        if($orderBy) $result->orderBy('p.'.array_key_first($orderBy), $orderBy[array_key_first($orderBy)]);
+
+        return $result->getQuery()->getResult();
     }
 
 
@@ -105,19 +113,11 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
     }
 
     /**
+     * @throws QueryException|NoResultException|NonUniqueResultException
      */
     public function countBy(array $criteria, $limit = null, $offset = null): int
     {
         $criteriaObj = $this->createCriteriaFromArray($criteria);
-        try {
-            return $this->_em->createQueryBuilder()
-                             ->select('count(p.id)')
-                             ->from(Product::class, 'p')
-                             ->addCriteria($criteriaObj)
-                             ->getQuery()
-                             ->getSingleScalarResult();
-        } catch (QueryException|NoResultException|NonUniqueResultException $e) {
-            return 0;
-        }
+        return $this->_em->createQueryBuilder()->select('count(p.id)')->from(Product::class, 'p')->addCriteria($criteriaObj)->getQuery()->getSingleScalarResult();
     }
 }

@@ -86,15 +86,13 @@ class ProductController extends AbstractController
      * @param Request                        $request
      * @param ProductImportForm              $productForm
      * @param ProductsImportServiceInterface $productsImportService
-     * @param SerializerInterface            $serializer
      *
      * @return Response
      */
     public function import(
         Request                        $request,
         ProductImportForm              $productForm,
-        ProductsImportServiceInterface $productsImportService,
-        SerializerInterface            $serializer
+        ProductsImportServiceInterface $productsImportService
     ): Response {
         $form = $this->createForm(ProductImportForm::class, $productForm);
         $form->handleRequest($request);
