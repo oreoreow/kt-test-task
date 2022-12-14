@@ -49,6 +49,10 @@ class ProductsImportService implements ProductsImportServiceInterface
             $element = null;
             try {
                 $element = new SimpleXMLElement($xml->readOuterXML());
+                if(!$element->name || !$element->description || !$element->weight || !$element->category) {
+                    throw new Exception('Invalid line');
+                }
+
                 fputcsv($csvFp, [
                     $element->name,
                     $element->description,

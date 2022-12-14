@@ -3,6 +3,7 @@ doctrine:
         url: '%env(resolve:DATABASE_URL)%'
         options:
             1001: true
+            1000: false
         mapping_types:
             enum: string
 

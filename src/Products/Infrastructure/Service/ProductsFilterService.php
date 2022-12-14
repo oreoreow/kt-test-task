@@ -22,6 +22,13 @@ class ProductsFilterService implements ProductsFilterServiceInterface
         ProductFilter $productFilter
     ): array
     {
+       $criteria = $this->getCriteriaFromProductFilter($productFilter);
+
+        return $this->productRepository->findBy($criteria, [$productFilter->getOrderBy() => $productFilter->getOrder()], $productFilter->getLimit(), $productFilter->getOffset());
+    }
+
+    private function getCriteriaFromProductFilter(ProductFilter $productFilter): array
+    {
         $criteria = [];
         if (in_array($productFilter->getCategory(), $this->getCategories())) {
             $criteria = ['category' => $productFilter->getCategory()];
@@ -34,8 +41,7 @@ class ProductsFilterService implements ProductsFilterServiceInterface
         if($productFilter->getMaxGWeight()) {
             $criteria = array_merge($criteria, ['maxWeight' => $productFilter->getMaxGWeight()]);
         }
-
-        return $this->productRepository->findBy($criteria, [$productFilter->getOrderBy() => $productFilter->getOrder()], $productFilter->getLimit(), $productFilter->getOffset());
+        return $criteria;
     }
 
     public function getCategories(): array
@@ -45,16 +51,8 @@ class ProductsFilterService implements ProductsFilterServiceInterface
 
     public function getFilteredProductsCount(ProductFilter $productFilter): int
     {
-        $newFilter = $this->productFilterFactory->create(
-            $productFilter->getOrderBy(),
-            $productFilter->getOrder(),
-            null,
-           1,
-            $productFilter->getCategory(),
-            $productFilter->getMinGWeight(),
-            $productFilter->getMaxGWeight(),
-        );
-        $products = $this->getFilteredProducts($newFilter);
-        return count($products);
+        $criteria = $this->getCriteriaFromProductFilter($productFilter);
+
+        return $this->productRepository->countBy($criteria);
     }
 }

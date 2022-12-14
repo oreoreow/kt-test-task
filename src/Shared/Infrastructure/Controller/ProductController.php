@@ -53,32 +53,7 @@ class ProductController extends AbstractController
         $totalProducts    = $this->productsFilterService->getFilteredProductsCount($productFilter);
         $totalPages = ceil($totalProducts/$productFilter->getLimit());
         $pagesRef = min($totalPages, 6);
-        $test = [
-            'list'       => $filteredProducts,
-            'categories' => [
-                'list' => $this->productsFilterService->getCategories()
-            ],
-            'total'      => $totalProducts,
-            'pages'      => [
-                'total'   => $totalPages,
-                'showMin' => $totalPages > $pagesRef && $productFilter->getPage() > $pagesRef/2 ? $productFilter->getPage()-ceil($pagesRef/2) : 1,
-                'showMax' => $productFilter->getPage() > $pagesRef/2 ? min(ceil($totalProducts/$productFilter->getLimit()), $productFilter->getPage()+floor($pagesRef/2)) : $pagesRef,
-            ],
-            'filter'     => [
-                'orderBy'   => $productFilter->getOrderBy(),
-                'order'     => $productFilter->getOrder(),
-                'limit'     => $productFilter->getLimit(),
-                'page'      => $productFilter->getPage(),
-                'category'  => $productFilter->getCategory(),
-                'minWeight' => $productFilter->getMinGWeight(),
-                'maxWeight' => $productFilter->getMaxGWeight(),
-            ]
-        ];
-        // echo "<pre>";
-        // var_dump($test['total']);
-        // var_dump($test['pages']);
-        // echo "</pre>";
-        // die();
+
 
         return $this->render('products.html.twig', [
             'products' => [
@@ -103,64 +78,6 @@ class ProductController extends AbstractController
                 ]
             ],
         ]);
-    }
-
-    /**
-     * @Route("/export")
-     * @param Request $request
-     *
-     * @return Response
-     */
-    public function export(Request $request): Response
-    {
-        $productFilter = $this->createProductFilter($request);
-
-        return $this->render('export.html.twig', [
-            'products' => [
-                'categories' => [
-                    'list' => $this->productsFilterService->getCategories()
-                ],
-                'total' => $this->productsFilterService->getFilteredProductsCount($productFilter),
-                'filter'     => [
-                    'orderBy'   => $productFilter->getOrderBy(),
-                    'order'     => $productFilter->getOrder(),
-                    'limit'     => $productFilter->getLimit(),
-                    'page'      => $productFilter->getPage(),
-                    'category'  => $productFilter->getCategory(),
-                    'minWeight' => $productFilter->getMinGWeight(),
-                    'maxWeight' => $productFilter->getMaxGWeight(),
-                ]
-            ],
-        ]);
-    }
-
-    /**
-     * @Route("/export/products.xml")
-     * @param Request $request
-     *
-     * @return BinaryFileResponse
-     */
-    public function exportXML(Request $request): BinaryFileResponse
-    {
-        $productFilter = $this->createProductFilter($request);
-        $filteredProducts = $this->productsFilterService->getFilteredProducts($productFilter);
-
-        $xmlContent = $this->renderView('export.xml.html.twig', [
-            'products' => $filteredProducts,
-        ]);
-
-
-        $path = $this->getParameter('kernel.project_dir') . '/public/xml/'.microtime().'.xml';
-        $fileSystem = new Filesystem();
-        $fileSystem->dumpFile($path, $xmlContent);
-        $response = new BinaryFileResponse($path);
-
-        $response->setContentDisposition(
-            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            'products.xml'
-        );
-
-        return $response;
     }
 
 
@@ -192,7 +109,8 @@ class ProductController extends AbstractController
             $renderParamsToMerge = [
                 'importedProductsReport' => [
                     'requestedCount' => $importedProductsReport->getRequestedProductsCount(),
-                    'savedCount' => $importedProductsReport->getSavedProductsCount()
+                    'savedCount' => $importedProductsReport->getSavedProductsCount(),
+                    'invalidCount' => $importedProductsReport->getInvalidLines()
                 ]
             ];
         }

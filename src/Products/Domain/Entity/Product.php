@@ -9,7 +9,7 @@ class Product
     private int $id;
     private string $name;
     private string $description;
-    private string $weight;
+    private int $weight;
     private string $category;
 
     public function getId(): ?int
@@ -41,21 +41,16 @@ class Product
         return $this;
     }
 
-    public function getWeight(): ?string
+    public function getWeight(): ?int
     {
         return $this->weight;
     }
 
-    public function getGWeight(): ?string
-    {
-        $weightExploded = explode(' ', $this->weight);
-        if($weightExploded[1] == 'g') return floatval($weightExploded[0]);
-        return floatval($weightExploded[0]) * 1000;
-    }
-
     public function setWeight(string $weight): self
     {
-        $this->weight = $weight;
+        $weightExploded = explode(' ', $this->weight);
+
+        $this->weight = $weightExploded[1] == 'g' ? floatval($weightExploded[0]) : floatval($weightExploded[0]) * 1000;
 
         return $this;
     }

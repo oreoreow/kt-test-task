@@ -13,7 +13,7 @@
         <field name="description" type="text">
 
         </field>
-        <field name="weight" type="string">
+        <field name="weight" type="integer">
 
         </field>
         <field name="category" type="string">

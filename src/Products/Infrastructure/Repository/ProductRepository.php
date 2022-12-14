@@ -6,7 +6,12 @@ use App\Products\Domain\Entity\Product;
 use App\Products\Domain\Entity\ProductFilter;
 use App\Products\Domain\Repository\ProductRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Exception;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\Query\QueryException;
 use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -24,7 +29,8 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
                 INTO TABLE products_product
                 FIELDS TERMINATED BY ',' ENCLOSED BY '\"'
                 LINES TERMINATED BY '\n'
-                IGNORE 0 ROWS (name, description, weight, category)";
+                IGNORE 0 ROWS (name, description, @weight, category)
+                SET weight = REPLACE(REPLACE(@weight, ' kg', '000'), ' g', '')";
 
         try {
             $stmt = $this->_em->getConnection()->prepare($sql);
@@ -42,91 +48,45 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
         $this->_em->flush();
     }
 
-
-    /**
-     * @param Product[] $products
-     *
-     * @return int
-     */
-    public function multiAdd(array $products): int
+    private function createCriteriaFromArray(array $criteria): Criteria
     {
-        var_dump(count($products));die();
-        // $savedProducts = 0;
-        // $existingNames = $this->getCurrentNames();
-        // foreach ($products as $product) {
-        //     if(in_array($product->getName(), $existingNames)) continue;
-        //
-        //     $this->_em->persist($product);
-        //     $this->_em->flush();
-        //
-        //     $savedProducts++;
-        // }
+        $minWeight = array_key_exists('minWeight', $criteria) ? $criteria['minWeight'] : 0;
+        $maxWeight = array_key_exists('maxWeight', $criteria) ? $criteria['maxWeight'] : 0;
 
-        return 100;
-    }
+        $criteriaObj = new Criteria();
 
-    /**
-     * @return string[]
-     */
-    private function getCurrentNames():array
-    {
-        return array_map(function ($product){
-            return $product['name'];
-        }, $this->_em->createQueryBuilder()
-            ->select('product.name')
-            ->from(Product::class, 'product')
-            ->getQuery()
-            ->getResult());
+        $criteriaObj->andWhere(Criteria::expr()->gte('weight', $minWeight));
+
+        if($maxWeight) {
+            $criteriaObj->andWhere(Criteria::expr()->lte('weight', $maxWeight));
+        }
+
+        if(array_key_exists('category', $criteria)) {
+            $criteriaObj->andWhere(Criteria::expr()->eq('category', $criteria['category']));
+        }
+
+        return $criteriaObj;
     }
 
 
     public function findBy(array $criteria, ?array $orderBy = null, $limit = null, $offset = null): array
     {
-        $customFilter = $orderBy &&
-                        array_key_first($orderBy) == ProductFilter::ORDER_BY_WEIGHT
-                        || array_key_exists('minWeight', $criteria)
-                        || array_key_exists('maxWeight', $criteria);
-        $finalLimit = $customFilter ? null : $limit;
-        $finalOffset = $customFilter ? null : $offset;
 
-        $minWeight = array_key_exists('minWeight', $criteria) ? $criteria['minWeight'] : 0;
-        $maxWeight = array_key_exists('maxWeight', $criteria) ? $criteria['maxWeight'] : 0;
+        $criteriaObj = $this->createCriteriaFromArray($criteria);
 
-
-        unset($criteria['minWeight']);
-        unset($criteria['maxWeight']);
-        $result = parent::findBy($criteria, $orderBy, $finalLimit, $finalOffset);
-
-        if ($minWeight) {
-            $result = array_filter($result, function (Product $product)use($minWeight){
-                return intval($product->getGWeight()) >= $minWeight;
-            });
+        try {
+            return $this->_em->createQueryBuilder()
+                      ->select('p')
+                      ->from(Product::class, 'p')
+                      ->addCriteria($criteriaObj)
+                      ->orderBy('p.'.array_key_first($orderBy), $orderBy[array_key_first($orderBy)])
+                      ->setMaxResults($limit)
+                      ->setFirstResult($offset)
+                      ->getQuery()
+                      ->getResult();
+        } catch (QueryException $e) {
+            return [];
         }
-
-        if ($maxWeight) {
-            $result = array_filter($result, function (Product $product)use($maxWeight){
-                return intval($product->getGWeight()) <= $maxWeight;
-            });
-        }
-
-
-        if($orderBy && array_key_first($orderBy) == ProductFilter::ORDER_BY_WEIGHT) {
-
-            $order = $orderBy[array_key_first($orderBy)];
-            usort($result,
-                function (Product $product1, Product $product2) use ($order) {
-                    return $order == ProductFilter::ORDER_ASC ?
-                        (intval($product1->getGWeight()) < intval($product2->getGWeight()) ? -1 : 1) :
-                        (intval($product1->getGWeight()) > intval($product2->getGWeight()) ? -1 : 1);
-                }
-            );
-        }
-
-        if ($customFilter) {
-            $result = array_slice($result, $offset, $limit);
-        }
-
-        return $result;
     }
 
 
@@ -142,5 +102,22 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
                          ->getQuery()
                          ->getResult()
         );
+    }
+
+    /**
+     */
+    public function countBy(array $criteria, $limit = null, $offset = null): int
+    {
+        $criteriaObj = $this->createCriteriaFromArray($criteria);
+        try {
+            return $this->_em->createQueryBuilder()
+                             ->select('count(p.id)')
+                             ->from(Product::class, 'p')
+                             ->addCriteria($criteriaObj)
+                             ->getQuery()
+                             ->getSingleScalarResult();
+        } catch (QueryException|NoResultException|NonUniqueResultException $e) {
+            return 0;
+        }
     }
 }

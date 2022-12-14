@@ -10,4 +10,5 @@ interface ProductRepositoryInterface
     public function findBy(array $criteria, ?array $orderBy = null, $limit = null, $offset = null): array;
     public function getCategories(): array;
     public function importProductsFromCSV(string $filename);
+    public function countBy(array $criteria, $limit = null, $offset = null):int;
 }
