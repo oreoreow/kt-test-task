@@ -16,8 +16,9 @@
         {% if importedProductsReport is defined %}
         <div class="row justify-content-center">
             <div class="col-lg-9 col-12 card">
-                <div class="card-body">
+                <div class="card-body px-0">
                     <p class="m-0">Imported {{ importedProductsReport.savedCount }}/{{ importedProductsReport.requestedCount}} {{ importedProductsReport.savedCount == 1 ? 'product' : 'products'}}</p>
+                    <p class="m-0">Invalid lines: {{ importedProductsReport.invalidCount }}</p>
                 </div>
             </div>
         </div>
