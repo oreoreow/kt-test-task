@@ -12,6 +12,7 @@ class ProductFactory
         string $weight,
         string $category
     ): Product {
+
         return (new Product())
             ->setName($name)
             ->setDescription($description)

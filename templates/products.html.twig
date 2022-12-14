@@ -32,9 +32,10 @@
             <!-- TODO: Refactor table header-->
             <div class="col-lg-9 col-12 card">
                 <div class="card-body p-0">
+                    {% if products.total > 0 %}
                     <div class="row mt-4 justify-content-end">
                         <div class="col">
-                            <nav aria-label="Page navigation example">
+                            <nav>
                                 <ul class="pagination">
                                     {% if products.pages.showMin > 1 %}
                                         <li class="page-item"><a class="page-link" href="{{ path(app.request.attributes.get('_route'),
@@ -158,8 +159,14 @@
                             </tr>
                         {% endfor %}
                     </table>
+                    {% else %}
+                        <div class="py-2">
+                            No products found
+                        </div>
+                    {% endif %}
                 </div>
             </div>
+
         </div>
     </div>
     <script>

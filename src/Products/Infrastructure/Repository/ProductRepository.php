@@ -6,16 +6,34 @@ use App\Products\Domain\Entity\Product;
 use App\Products\Domain\Entity\ProductFilter;
 use App\Products\Domain\Repository\ProductRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Exception;
+use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\Persistence\ManagerRegistry;
 
 class ProductRepository extends ServiceEntityRepository implements ProductRepositoryInterface
 {
 
-    private int $totalCount;
-
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Product::class);
+    }
+
+    public function importProductsFromCSV(string $filename): bool
+    {
+        $sql = "LOAD DATA LOCAL INFILE '$filename'
+                INTO TABLE products_product
+                FIELDS TERMINATED BY ',' ENCLOSED BY '\"'
+                LINES TERMINATED BY '\n'
+                IGNORE 0 ROWS (name, description, weight, category)";
+
+        try {
+            $stmt = $this->_em->getConnection()->prepare($sql);
+            $stmt->executeQuery();
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        return true;
     }
 
     public function add(Product $product): void
@@ -23,6 +41,44 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
         $this->_em->persist($product);
         $this->_em->flush();
     }
+
+
+    /**
+     * @param Product[] $products
+     *
+     * @return int
+     */
+    public function multiAdd(array $products): int
+    {
+        var_dump(count($products));die();
+        // $savedProducts = 0;
+        // $existingNames = $this->getCurrentNames();
+        // foreach ($products as $product) {
+        //     if(in_array($product->getName(), $existingNames)) continue;
+        //
+        //     $this->_em->persist($product);
+        //     $this->_em->flush();
+        //
+        //     $savedProducts++;
+        // }
+
+        return 100;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getCurrentNames():array
+    {
+        return array_map(function ($product){
+            return $product['name'];
+        }, $this->_em->createQueryBuilder()
+            ->select('product.name')
+            ->from(Product::class, 'product')
+            ->getQuery()
+            ->getResult());
+    }
+
 
     public function findBy(array $criteria, ?array $orderBy = null, $limit = null, $offset = null): array
     {
@@ -72,6 +128,7 @@ class ProductRepository extends ServiceEntityRepository implements ProductReposi
 
         return $result;
     }
+
 
     public function getCategories(): array
     {

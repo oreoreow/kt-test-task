@@ -15,6 +15,7 @@ class ProductFilterFactory
         string $minWeight,
         string $maxWeight,
     ): ProductFilter {
+
         return (new ProductFilter())
             ->setLimit($limit)
             ->setOrder($order)
